@@ -15,6 +15,7 @@ library(tibble)
 library(tidyverse)
 library(ggrepel)
 library(grid)
+library(data.table)
 
 # adapt to your path
 setwd("D:/GCRF_UoG/Vicky_JCR_Shiny/")
@@ -24,8 +25,11 @@ setwd("D:/GCRF_UoG/Vicky_JCR_Shiny/")
 # all_genes_final = row.names(tcells.combined.umap.list[[1]][[1]][[1]])
 
 tcells_combined_umap_list_res<-readRDS("tcells_combined_umap_list_res.rds")
-tcells.combined.clusters.tables<-readRDS("tcells_combined_clusters_tables.rds")
-all_genes_final = row.names(tcells_combined_umap_list_res[[1]][[1]][[1]])
+tcells_combined_clusters_tables_res<-readRDS("tcells_combined_clusters_tables_res.rds")
+#all_genes_final = row.names(tcells_combined_umap_list_res[1])
+all_genes_final = readRDS("all_genes_final.rds")
+
+uniprot_info = fread("/GCRF_UoG/Vicky_JCR_Shiny/uniprot table/unipro-mouseID")
 
 dim=15
 # dim1 = 10
@@ -194,7 +198,7 @@ if (!(all(exists("tcells_combined_umap_list_res"), exists("tcells_combined_clust
   # 
   # saveRDS(tcells.combined.clusters.tables, "tcells.combined.clusters.tables.rds")
   
-  tcells_combined_clusters_tables_res = lapply(tcells_combined_umap_list_res, function(x) { 
+  tcells_combined_clusters_tables_res = lapply(tcells_combined_umap_list_res[1], function(x) { 
           DefaultAssay(x) = "RNA"
           lapply(0:(length(unique(x$seurat_clusters))-1), function(y) {
             FindConservedMarkers(x, ident.1 = y, grouping.var = "group")
@@ -483,8 +487,9 @@ server = function(input, output) {
   #   tcells.combined.umap.list[[((input$umap_dim/5) - 1)]][[((input$umap_dim/5) - 1)]][[round(input$clusters_res/0.25)]]
   # })
   
+  #function draw clusters
   umap_clusters = eventReactive(input$go, {
-    tcells.combined.umap.list[[((input$umap_dim/5) - 1)]][[((input$umap_dim/5) - 1)]][[round(input$clusters_res/0.25)]]
+    tcells_combined_umap_list_res[[(input$clusters_res * 10)-0.5]]
   })
   
   output$all_groups = renderPlot({
@@ -511,7 +516,7 @@ server = function(input, output) {
   #   head(tcells.combined.clusters.tables[[((input$umap_dim/5) - 1)]][[((input$umap_dim/5) - 1)]][[round(input$clusters_res/0.25)]][[(as.numeric(input$marker_genes_cluster) + 1)]], n = input$marker_genes_no)
   # })
   cluster_markers = eventReactive(input$go_marker, {
-    head(tcells_combined_clusters_tables_res[[((input$umap_dim/5) - 1)]][[((input$umap_dim/5) - 1)]][[round(input$clusters_res/0.25)]][[(as.numeric(input$marker_genes_cluster) + 1)]], n = input$marker_genes_no)
+    head(tcells_combined_clusters_tables_res[[(input$clusters_res * 10)-0.5]][[(as.numeric(input$marker_genes_cluster) + 1)]], n = input$marker_genes_no)
   })
   
   ##Finding conserved genes in clusters in both conditions to annotate cell types
@@ -647,6 +652,7 @@ server = function(input, output) {
     Idents(cells_type) <- "sample"
     avg.cells <- log1p(AverageExpression(cells_type, verbose = FALSE)$RNA)
     avg.cells$gene <- rownames(avg.cells)
+    avg.cells <- merge(avg.cells, uniprot_info, by.x = "gene", by.y = "Gene names", all.x = T)
     avg.cells
     
   })
@@ -692,6 +698,12 @@ server = function(input, output) {
     displayed_text()
   })
   
+  
+  ######################
+  ### Differential expressino dynamic part
+  ######################
+  
+  #Functions to updated differentially expressed genes
   output$de_stim_vs_ctrl_um = renderPlot({
     
     FeaturePlot(stim_markers(), features = input$de_genes, split.by = "sample", max.cutoff = 3,cols = c("grey", "red"))
@@ -703,12 +715,16 @@ server = function(input, output) {
     
   })
   
+  ## Define two panels for UMAP and violin plots
   output$tb <- renderUI({
     tabsetPanel(tabPanel("UMAP plot", 
                          plotOutput("de_stim_vs_ctrl_um")),
                 tabPanel("Violin plot", 
                          plotOutput("de_stim_vs_ctrl_vp"))) 
   })
+  ######################
+  ### END Differential expressino dynamic part
+  ######################
   
   
 }
