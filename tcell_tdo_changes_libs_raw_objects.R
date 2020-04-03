@@ -19,31 +19,31 @@ library(data.table)
 library(shinycssloaders)
 
 # adapt to your path
-setwd("D:/GCRF_UoG/Vicky_JCR_Shiny/")
+setwd("D:/GCRF_UoG/Vicky_JCR_Shiny/Tcells_amp_adopted/")
 
 ##Reading in the list of precomputed Seurat objects (Resolution 0.15 0.25&0.35, 0.45&0.55 computed separately read in and combined then written to disk and )
-tcells_combined_umap_list_res<-readRDS("tcells_combined_umap_list_res.rds")
-# tcells_combined_clusters_tables_res1<-readRDS("tcells_combined_clusters_tables_res.rds")
-# saveRDS(tcells_combined_clusters_tables_res1, "tcells_combined_clusters_tables_res1.rds")
-# tcells_combined_clusters_tables_res2_3<-readRDS("tcells_combined_clusters_tables_res2_3.rds")
-# tcells_combined_clusters_tables_res4_5<-readRDS("tcells_combined_clusters_tables_res4_5.rds")
+tcells_combined_umap_list_res<-readRDS("D:/GCRF_UoG/Vicky_JCR_Shiny/tcells_combined_umap_list_res.rds")
+# tcells_combined_clusters_tables_res1<-readRDS("D:/GCRF_UoG/Vicky_JCR_Shiny/tcells_combined_clusters_tables_res.rds")
+# saveRDS(tcells_combined_clusters_tables_res1, "D:/GCRF_UoG/Vicky_JCR_Shiny/tcells_combined_clusters_tables_res1.rds")
+# tcells_combined_clusters_tables_res2_3<-readRDS("D:/GCRF_UoG/Vicky_JCR_Shiny/tcells_combined_clusters_tables_res2_3.rds")
+# tcells_combined_clusters_tables_res4_5<-readRDS("D:/GCRF_UoG/Vicky_JCR_Shiny/tcells_combined_clusters_tables_res4_5.rds")
 # tcells_combined_clusters_tables_res = c(tcells_combined_clusters_tables_res1, tcells_combined_clusters_tables_res2_3, tcells_combined_clusters_tables_res4_5)
-# saveRDS(tcells_combined_clusters_tables_res, "tcells_combined_clusters_tables_res.rds")
+# saveRDS(tcells_combined_clusters_tables_res, "D:/GCRF_UoG/Vicky_JCR_Shiny/tcells_combined_clusters_tables_res.rds")
 
 ##Reading in the list of precomputed table of cluster markers
-tcells_combined_clusters_tables_res<-readRDS("tcells_combined_clusters_tables_res.rds")
+tcells_combined_clusters_tables_res<-readRDS("D:/GCRF_UoG/Vicky_JCR_Shiny/tcells_combined_clusters_tables_res.rds")
 
 ##Reading in the list of precomputed table of differential expressed (DE) genes
 tcells_combined_de_tables = readRDS("D:/GCRF_UoG/Vicky_JCR_Shiny/preprocessed/tcells_combined_de_tables.rds")
 
 ##Reading in all the genes that are present in WT1, WT2 and KO raw objects
-all_genes_common_in_all_groups = readRDS("all_genes_common_in_all_groups.rds")
+all_genes_common_in_all_groups = readRDS("D:/GCRF_UoG/Vicky_JCR_Shiny/all_genes_common_in_all_groups.rds")
 
 ##Reading in and processing table of uniprot links for all mouse genes
 # uniprot_info_raw = fread("/GCRF_UoG/Vicky_JCR_Shiny/uniprot table/unipro-mouseID")
 # uniprot_info_raw$uniprot = paste('<a href="https://www.uniprot.org/uniprot/',uniprot_info_raw$Entry,'" target="_blank">', uniprot_info_raw$Entry,'</a>', sep = "")
 # write.table(uniprot_info_raw, "/GCRF_UoG/Vicky_JCR_Shiny/uniprot_info_with_link", row.names = F, sep = "\t", quote = F)
-uniprot_info = fread("uniprot_info_with_link", stringsAsFactors = F)
+uniprot_info = fread("D:/GCRF_UoG/Vicky_JCR_Shiny/uniprot_info_with_link", stringsAsFactors = F)
 
 ##Declaring and assigning variables
 dim=15
@@ -51,7 +51,7 @@ dim=15
 res1 = 0.15
 res2 = 0.55
 diff_res = 0.1
-cluster_names = c("Il171a+ve", "Ccr7 +ve", "Ly6c2 +ve", "Gzma +ve", "Cdk6 +ve")
+cluster_names = c("Il17a+ve", "Ccr7 +ve", "Ly6c2 +ve", "Gzma +ve", "Cdk6 +ve")
 fav_genes = c("Cdk6", "Gzma", "Ly6c2", "Ccr7", "Il17a")
 
 ##Code block for processing raw 10X data and computing the Seurat objects and cluster marker tables
@@ -212,7 +212,7 @@ if (!(all(exists("tcells_combined_umap_list_res"), exists("tcells_combined_clust
   
   ##Precomputing and saving the list of Seurat objects with different clusters through adjusting of resolution from 0.15, 0.25, 0.35, 0.45 & 0.55
   tcells_combined_umap_list_res = lapply(seq(res1, res2, by = diff_res), function(x) FindClusters(Combined.filt, resolution = x))
-  saveRDS(tcells_combined_umap_list_res, "tcells_combined_umap_list_res.rds")
+  saveRDS(tcells_combined_umap_list_res, "D:/GCRF_UoG/Vicky_JCR_Shiny/tcells_combined_umap_list_res.rds")
   
   ##Precomputing and saving the list of Seurat objects with different clusters through adjusting of resolution from 0.15, 0.25, 0.35, 0.45 & 0.55
   # tcells.combined.clusters.tables = lapply(tcells.combined.umap.list, function(x) { 
@@ -228,7 +228,7 @@ if (!(all(exists("tcells_combined_umap_list_res"), exists("tcells_combined_clust
   #   }) 
   # })
   # 
-  # saveRDS(tcells.combined.clusters.tables, "tcells.combined.clusters.tables.rds")
+  # saveRDS(tcells.combined.clusters.tables, "D:/GCRF_UoG/Vicky_JCR_Shiny/tcells.combined.clusters.tables.rds")
   
   ##Precomputing and saving the list of tables of cluster markers
   tcells_combined_clusters_tables_res = lapply(tcells_combined_umap_list_res, function(x) { 
@@ -239,7 +239,7 @@ if (!(all(exists("tcells_combined_umap_list_res"), exists("tcells_combined_clust
     })
   })
   
-  saveRDS(tcells_combined_clusters_tables_res, "tcells_combined_clusters_tables_res.rds")
+  saveRDS(tcells_combined_clusters_tables_res, "D:/GCRF_UoG/Vicky_JCR_Shiny/tcells_combined_clusters_tables_res.rds")
   
   
   ##Precomputing and saving the list of tables of DE genes per cluster
@@ -255,6 +255,6 @@ if (!(all(exists("tcells_combined_umap_list_res"), exists("tcells_combined_clust
     })
   })
   
-  saveRDS(tcells_combined_de_tables, "tcells_combined_de_tables.rds")
+  saveRDS(tcells_combined_de_tables, "D:/GCRF_UoG/Vicky_JCR_Shiny/tcells_combined_de_tables.rds")
   
 }

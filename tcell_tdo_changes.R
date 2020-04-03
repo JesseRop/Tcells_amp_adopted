@@ -1,10 +1,11 @@
 
-source("Tcells_amp_adopted/tcell_tdo_changes_libs_raw_objects.R")
+source("tcell_tdo_changes_libs_raw_objects.R")
 ##Creating the ui object for the user interface
 ##Creating the ui object for the user interface
-ui = fluidPage(theme = shinytheme("lumen"),
-               ##Overal title for the app
+
+ui = fluidPage(theme = shinytheme("united"),
                navbarPage("Role of CD18 in γδ T cells",
+                          source(file.path("introduction_page.R"), local = TRUE)$value,
                           
                           ##The first tab which is for the differential expression visualization
                           tabPanel("Differential expression",
@@ -19,14 +20,33 @@ ui = fluidPage(theme = shinytheme("lumen"),
                                        conditionalPanel(condition = "input.de_panel == 'Gene expression visualization across cell types and clusters'",
                                                         #Select PC to plot
                                                         selectInput(inputId = "de_genes", label = strong("Choose gene:"),choices = all_genes_common_in_all_groups, multiple = F),
-                                                        #actionButton(inputId = "go_heatmap", label = "Run"),
+                                                        #actionButton(inputId = "go_heatmap", label = "Run")
                                                         #sliderInput(inputId = "cells", label = strong("Select number of cells in each tail"), min = 1, max = 500, value = 50)
+                                                        fluidPage(
+                                                          tags$hr(),
+                                                          tags$p(style = "font-family:Comic Sans MS;color:navy",
+                                                                 #titlePanel("includeText"),
+                                                                 #fluidRow(
+                                                                 #column(12,
+                                                                 "Comparison of gene expression between WT and KO across cell types using umap and violin plots"
+                                                                 #))
+                                                          ),
+                                                          tags$hr()
+                                                        )
+                                                        
                                        ),
                                        
                                        #Option/subtitle for comparison of gene expression between WT and KO across cell types using dotplots
                                        conditionalPanel(condition = "input.de_panel == 'Dotplot of gene expression across cell types and clusters'",
                                                         #Select PC to plot
-                                                        selectInput(inputId = "select_markers_dotplot", label = strong("Select markers for dotplot:"),choices = all_genes_common_in_all_groups, multiple = T, selected = fav_genes)
+                                                        selectInput(inputId = "select_markers_dotplot", label = strong("Select markers for dotplot:"),choices = all_genes_common_in_all_groups, multiple = T, selected = fav_genes),
+                                                        fluidPage(
+                                                          tags$hr(),
+                                                          tags$p(style = "font-family:Comic Sans MS;color:navy",
+                                                                 "Comparison of gene expression between WT and KO across cell types using dotplots. Red if for Wildtype and Blue for CD18KO with the increasing in intensity correlating with the level of gene expression in the population"
+                                                          ),
+                                                          tags$hr()
+                                                        )
                                        ),
                                        
                                        #Option/subtitle for comparison of gene expression between WT and KO across cell types using scatter plots and tables looking at all the genes in a cell type
@@ -36,14 +56,26 @@ ui = fluidPage(theme = shinytheme("lumen"),
                                                         uiOutput("cluster_ids"),
                                                         #radioButtons(inputId = "condition2", label = "WT group to compare to KO", choiceNames = c("Wildtype 1", "Wildtype 2"), choiceValues = (c("WT1","WT2"))),
                                                         conditionalPanel(condition = "input.tabslctd == 'gg'",
-                                                                         uiOutput("ct_de_plot_dyn")
+                                                                         uiOutput("ct_de_plot_dyn"),
+                                                                         fluidPage(
+                                                                           tags$hr(),
+                                                                           tags$p(style = "font-family:Comic Sans MS;color:navy",
+                                                                           "Comparison of gene expression between WT and CD18 KO across cell types using scatter plots looking at all the genes in a cell type"
+                                                                             ),
+                                                                           tags$hr()
+                                                                         )
                                                         ),
                                                         conditionalPanel(condition = "input.tabslctd == 'tbl'",
                                                                          sliderInput(inputId = "no_of_de_genes", label = strong("Number of top DE genes:"), value = 10, min = 1, max = 100, step = 1),
-                                                                         downloadButton("downloadData", "Download table of significantly DE genes")
+                                                                         downloadButton("downloadData", "Download table of significantly DE genes"),
+                                                                         fluidPage(
+                                                                           tags$hr(),
+                                                                           tags$p(style = "font-family:Comic Sans MS;color:navy",
+                                                                           "Listing differential expressed genes (adjusted P value <0.05) WT and CD18 KO across cell populations"
+                                                                             ),
+                                                                           tags$hr()
+                                                                         )
                                                         )
-                                                        
-                                                        
                                        )
                                        
                                      ),
@@ -59,9 +91,7 @@ ui = fluidPage(theme = shinytheme("lumen"),
                                        conditionalPanel(
                                          condition = "input.de_panel == 'Differential gene expression between cell types in individual clusters'", 
                                          uiOutput("de_outputs"))
-                                       
-                                       
-                                       
+                                        
                                      )
                                    )
                           ),
@@ -81,20 +111,39 @@ ui = fluidPage(theme = shinytheme("lumen"),
                                                         # sliderInput(inputId = "neighbours_dim", label = strong("Number of PCs from 1 (KNN clustering in FindNeighbours function)"), value = dim1, min = dim1, max = dim2, step = diff_dim),
                                                         sliderInput(inputId = "clusters_res", label = strong("Louvain algorithm resolution"), value = res1, min = res1, max = res2, step = diff_res, round = F),
                                                         #actionButton(inputId = "go", label = "Run")
-                                                        
+                                                        fluidPage(
+                                                          tags$hr(),
+                                                          tags$p(style = "font-family:Comic Sans MS;color:navy",
+                                                                 "Adjusting resolution (0.15, 0.25, 0.35, 0.45 or 0.55) to set the clustering granularity. This options allow the subdivision of clusters further into sub-populations to obtain rare cell types and assess differential expression in these"
+                                                          ),
+                                                          tags$hr()
+                                                        )
                                        ),
                                        
-                                       #2.2 Option/subtitle for adjusting resolution to give more clustering
+                                       #2.2 Option/subtitle for listing top cluster markers for which can then be used in the labelling of the generated populations
                                        conditionalPanel(condition = "input.graph_type == 'Top cluster markers conserved between WT and KO'",
                                                         uiOutput("dyn_clusters"),
                                                         conditionalPanel(condition = "input.cm_tabslctd == 'marker_tbl'",
                                                                          sliderInput(inputId = "marker_genes_no", label = strong("Choose number of top markers to display:"), value = 10, min = 1, max = 100, step = 1),
+                                                                         fluidPage(
+                                                                           tags$hr(),
+                                                                           tags$p(style = "font-family:Comic Sans MS;color:navy",
+                                                                           "Listing top cluster markers which can then be used in the labelling of the generated populations"
+                                                                           ),
+                                                                           tags$hr()
+                                                                         )
                                                         ),
                                                         conditionalPanel(condition = "input.cm_tabslctd == 'marker_umap'",
                                                                          selectInput(inputId = "select_markers_umap", label = strong("select marker to visualize in clusters:"), choices = all_genes_common_in_all_groups, multiple = T, selected = fav_genes),
+                                                                         fluidPage(
+                                                                           tags$hr(),
+                                                                           tags$p(style = "font-family:Comic Sans MS;color:navy",
+                                                                           "Visualize the top cluster markers to confirm that they are expressed in the appropriate populations"
+                                                                           ),
+                                                                           tags$hr()
+                                                                         )
                                                         )
-                                                        #actionButton(inputId = "go_marker", label = "Search"),
-                                                        
+
                                        ),
                                        
                                        #2.3 Option/subtitle for allowing the labelling of the clusters
@@ -102,6 +151,13 @@ ui = fluidPage(theme = shinytheme("lumen"),
                                                         #Select PC to plot
                                                         uiOutput("cluster_annot"),
                                                         #actionButton(inputId = "go_labelled_umap", label = "View labelled clusters"),
+                                                        fluidPage(
+                                                          tags$hr(),
+                                                          tags$p(style = "font-family:Comic Sans MS;color:navy",
+                                                          "Labelling populations using the top cluster markers"
+                                                          ),
+                                                          tags$hr()
+                                                        )
                                        )
                                      ),
                                      
