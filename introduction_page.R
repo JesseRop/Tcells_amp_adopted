@@ -17,7 +17,7 @@ tabPanel("About",
 Here, you can explore the scRNAseq dataset from wild type (WT) and β2 integrin-deficient (CD18 Knock-out[KO]) γδ T cells isolated from mice lungs.
 </p>
 <p>
-Further details can be found in a our paper summarized below which you should cite as relevant
+The analysis was carried using the Seurat pipeline for differential expression. Further details can be found in our paper summarized below which you should cite if you use our data
 </p>
 
 <div class='citation'>
@@ -42,20 +42,22 @@ findings illustrate a novel mechanism of γδ T cell regulation that may have si
 <div class='citation'>
 <p> The results are displayed in 2 sections
 <ul>
-<li><a onclick = 'fakeClick(\"Differential expression\")'> Differential expression</a> - This allow the visualization of gene expression in CD18 KO cells to that of Wildtype cells using
-parameter specified in the paper (the first 15 Principal components and 0.15 as the clustering resolution). </li>
-<li><a onclick = 'fakeClick(\"Cluster adjustment\")'> Clustering</a> - This allows advanced analysis by increasing the resolution to further refine the clustering of cells. Increased resolution results in
-in more clusters which may be sub-population of previous clusters.</li>
+<li><a onclick = 'fakeClick(\"Differential expression\")'> Differential expression</a> - Visualization of gene expression in CD18-KO clusters compared to that in WT cells using
+parameters specified in the paper (i.e the first 15 Principal components and 0.15 as the clustering resolution). </li>
+<li><a onclick = 'fakeClick(\"Cluster adjustment\")'> Clustering</a> - Advanced analysis by increasing the resolution to further refine the clustering of cells. Increased resolution results in
+in the sub-division of optimum clusters characterized in the paper into sub-populations.</li>
 </ul>
 </p> 
 </div>
 
-<div>
+<div style='border:thin solid black ; padding:30px ; margin:30px'>
+<figure>  
 <h4>Key results</h4>
-<img src='tcell_cd18_intro_image.png' alt='Results' style='width:100%;'>
+<img src='tcell_cd18_intro_image_clearer_labelled.png' alt='Results' style='width:100%;'>
+<figcaption><b>A:</b> UMAP of the labelled  populations γδ T cells obtained using 15 principal components and 0.15 as the clustering resolution in Seurat. <b>B:</b> The proportion of the different populations of γδ T cells in the wildtype replicates (WT1 and WT2) and the CD18 Knockout (KO1).</figcaption>
+</figure>
 </div>
 
 "))
          
 )
-
