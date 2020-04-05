@@ -123,26 +123,39 @@ ui = fluidPage(theme = shinytheme("united"),
                                        #2.2 Option/subtitle for listing top cluster markers for which can then be used in the labelling of the generated populations
                                        conditionalPanel(condition = "input.graph_type == 'Top cluster markers conserved between WT and KO'",
                                                         uiOutput("dyn_clusters"),
-                                                        conditionalPanel(condition = "input.cm_tabslctd == 'marker_tbl'",
-                                                                         sliderInput(inputId = "marker_genes_no", label = strong("Choose number of top markers to display:"), value = 10, min = 1, max = 100, step = 1),
-                                                                         fluidPage(
-                                                                           tags$hr(),
-                                                                           tags$p(style = "font-family:Comic Sans MS;color:navy",
-                                                                           "Listing top cluster markers which can then be used in the labelling of the generated populations"
-                                                                           ),
-                                                                           tags$hr()
-                                                                         )
-                                                        ),
-                                                        conditionalPanel(condition = "input.cm_tabslctd == 'marker_umap'",
-                                                                         selectInput(inputId = "select_markers_umap", label = strong("select marker to visualize in clusters:"), choices = all_genes_common_in_all_groups, multiple = T, selected = fav_genes),
-                                                                         fluidPage(
-                                                                           tags$hr(),
-                                                                           tags$p(style = "font-family:Comic Sans MS;color:navy",
-                                                                           "Visualize the top cluster markers to confirm that they are expressed in the appropriate populations"
-                                                                           ),
-                                                                           tags$hr()
-                                                                         )
+                                                        sliderInput(inputId = "marker_genes_no", label = strong("Choose number of top markers to display:"), value = 10, min = 1, max = 100, step = 1),
+                                                        
+                                                        #selectInput(inputId = "select_markers_umap", label = strong("select marker to visualize in clusters:"), choices = all_genes_common_in_all_groups, multiple = T, selected = fav_genes),
+                                                        uiOutput("top_markers_umap"),
+                                                        
+                                                        fluidPage(
+                                                          tags$hr(),
+                                                          tags$p(style = "font-family:Comic Sans MS;color:navy",
+                                                                 "Listing top cluster markers which can then be used in the labelling of the generated populations"
+                                                          ),
+                                                          tags$hr()
                                                         )
+                                       #)
+                                                        # conditionalPanel(condition = "input.cm_tabslctd == 'marker_tbl'",
+                                                        #                  uiOutput("top_markers_umap"),
+                                                        #                  fluidPage(
+                                                        #                    tags$hr(),
+                                                        #                    tags$p(style = "font-family:Comic Sans MS;color:navy",
+                                                        #                    "Listing top cluster markers which can then be used in the labelling of the generated populations"
+                                                        #                    ),
+                                                        #                    tags$hr()
+                                                        #                  )
+                                                        # ),
+                                                        # conditionalPanel(condition = "input.cm_tabslctd == 'marker_umap'",
+                                                        #                  selectInput(inputId = "select_markers_umap", label = strong("select marker to visualize in clusters:"), choices = all_genes_common_in_all_groups, multiple = T, selected = fav_genes),
+                                                        #                  fluidPage(
+                                                        #                    tags$hr(),
+                                                        #                    tags$p(style = "font-family:Comic Sans MS;color:navy",
+                                                        #                    "Visualize the top cluster markers to confirm that they are expressed in the appropriate populations"
+                                                        #                    ),
+                                                        #                    tags$hr()
+                                                        #                  )
+                                                        # )
 
                                        ),
                                        
@@ -224,12 +237,13 @@ server = function(input, output) {
   
   ##Displaying table of cluster markers for annotating cell types
   cluster_markers = reactive({
-    head(tcells_combined_clusters_tables_res[[(input$clusters_res * 10)-0.5]][[(as.numeric(input$marker_genes_cluster) + 1)]], n = input$marker_genes_no)
+    head(tcells_combined_clusters_tables_res[[(input$clusters_res * 10)-0.5]][[(as.numeric(input$marker_genes_cluster) + 1)]] %>% rownames_to_column(var = 'genes'), n = input$marker_genes_no)
+
   })
   
-  output$top_conserved_genes = renderTable({
-    cluster_markers() %>% rownames_to_column(var = 'genes') %>% mutate_at(vars(matches("p_val|pval") ), ~formatC(., format = "e", digits = 2))
-  })
+  output$top_conserved_genes = renderDataTable({
+    datatable(cluster_markers() %>% mutate_at(vars(matches("p_val|pval") ), ~formatC(., format = "e", digits = 2)))
+  }, options = list(scrollX = TRUE))
   
   ##Preparing and plotting UMAP cluster markers for annotating cell types
   umap_cluster_modified_rna = reactive({
@@ -238,16 +252,43 @@ server = function(input, output) {
     umap_cluster_modified_ul
   })
   
+  # output$conserved_markers_umap = renderPlot({
+  #   FeaturePlot(umap_cluster_modified_rna(), features = input$select_markers_umap, min.cutoff = "q9")
+  # })
+  
+  ##Conditional tabsets for the DE table and ggplot UI change for input triggered by selecting tab 
+  # output$cluster_markers_outputs <- renderUI({
+  #   tabsetPanel(tabPanel("Top cluster markers table", value = "marker_tbl", 
+  #                        withSpinner(dataTableOutput("top_conserved_genes"))),
+  #               tabPanel("Cluster marker UMAPs", value = "marker_umap",
+  #                        withSpinner(plotOutput("conserved_markers_umap"))), id = "cm_tabslctd")
+  # })
+  
+  output$top_markers_umap <- renderUI({
+    a = head(cluster_markers()[,1])
+    a = factor(a, levels = c(a))
+    print(a)
+    selectInput(inputId = "select_markers_umap", label = strong("select marker to visualize in clusters:"), choices = all_genes_common_in_all_groups, multiple = T, selected = a)
+    
+    })
   output$conserved_markers_umap = renderPlot({
     FeaturePlot(umap_cluster_modified_rna(), features = input$select_markers_umap, min.cutoff = "q9")
   })
   
-  ##Conditional tabsets for the DE table and ggplot UI change for input triggered by selecting tab 
+  #Conditional tabsets for the DE table and ggplot UI change for input triggered by selecting tab
   output$cluster_markers_outputs <- renderUI({
-    tabsetPanel(tabPanel("Top cluster markers table", value = "marker_tbl", 
-                         withSpinner(tableOutput("top_conserved_genes"))),
-                tabPanel("Cluster marker UMAPs", value = "marker_umap",
-                         withSpinner(plotOutput("conserved_markers_umap"))), id = "cm_tabslctd")
+    fluidPage(
+      fluidRow(
+        h4("Cluster markers table"),
+        withSpinner(dataTableOutput("top_conserved_genes"))
+      ),
+      fluidRow(
+        h4("UMAP of 6 top markers"),
+        withSpinner(plotOutput("conserved_markers_umap"))
+
+      )
+    )
+
   })
   
   ######################
@@ -412,8 +453,8 @@ server = function(input, output) {
   })
   
   ##plotting DE table
-  output$top_de_genes = renderTable({
-    top_de_g()
+  output$top_de_genes = renderDataTable({
+    datatable(top_de_g())
   })
   
   ##Allowing for download of DE table
@@ -461,7 +502,7 @@ server = function(input, output) {
     tabsetPanel(tabPanel("DE ggplot", value = "gg", 
                          withSpinner(plotOutput("cell_type_plot", click = clickOpts(id ="plot_click"))), dataTableOutput("click_info")),
                 tabPanel("DE table", value = "tbl",
-                         withSpinner(tableOutput("top_de_genes"))), id = "tabslctd")
+                         withSpinner(dataTableOutput("top_de_genes"))), id = "tabslctd")
   })
   
   ##Displaying further details upon clicking points
