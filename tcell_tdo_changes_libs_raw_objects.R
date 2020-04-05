@@ -17,6 +17,7 @@ library(ggrepel)
 library(grid)
 library(data.table)
 library(shinycssloaders)
+library(DT)
 
 # adapt to your path
 setwd("D:/GCRF_UoG/Vicky_JCR_Shiny/Tcells_amp_adopted/")
