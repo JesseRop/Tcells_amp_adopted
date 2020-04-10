@@ -52,8 +52,9 @@ dim=15
 res1 = 0.15
 res2 = 0.55
 diff_res = 0.1
-cluster_names = c("Il17a+ve", "Ccr7 +ve", "Ly6c2 +ve", "Gzma +ve", "Cdk6 +ve")
+cluster_names = c("Il17a +ve cells", "Ccr7 +ve cells", "Ly6c2 +ve cells", "Gzma +ve cells", "Cdk6 +ve cells")
 fav_genes = c("Cdk6", "Gzma", "Ly6c2", "Ccr7", "Il17a")
+conditions = c("CD18 KO", "WT")
 
 ##Code block for processing raw 10X data and computing the Seurat objects and cluster marker tables
 #if (!(all(exists("tcells.combined.umap.list"), exists("tcells.combined.clusters.tables")))) {
