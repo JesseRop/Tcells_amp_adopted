@@ -1,4 +1,3 @@
-
 source("tcell_tdo_changes_libs_raw_objects.R")
 ##Creating the ui object for the user interface
 ##Creating the ui object for the user interface
@@ -20,7 +19,7 @@ ui = fluidPage(theme = shinytheme("united"),
                                        conditionalPanel(condition = "input.de_panel == 'Gene expression visualization across cell types and clusters'",
                                                         wellPanel(
                                                           #Select PC to plot
-                                                          selectInput(inputId = "de_genes", label = strong("Choose gene:"),choices = all_genes_common_in_all_groups, multiple = F)
+                                                          selectInput(inputId = "de_genes", label = strong("Choose gene:"),choices = all_genes_common_in_all_groups, multiple = F, selected = "Cd163l1")
                                                           #actionButton(inputId = "go_heatmap", label = "Run")
                                                           #sliderInput(inputId = "cells", label = strong("Select number of cells in each tail"), min = 1, max = 500, value = 50)
                                                         ),
@@ -102,28 +101,7 @@ ui = fluidPage(theme = shinytheme("united"),
                                                         ),
                                                         uiOutput("box_2_2") 
                                                         
-                                                        #)
-                                                        # conditionalPanel(condition = "input.cm_tabslctd == 'marker_tbl'",
-                                                        #                  uiOutput("top_markers_umap"),
-                                                        #                                                                            wellPanel(style = "background:Teal",
-                                                        #                    tags$hr(),
-                                                        #                    tags$p(style = "font-family:Comic Sans MS;color:white",
-                                                        #                    "Listing top cluster markers which can then be used in the labelling of the generated populations"
-                                                        #                    ),
-                                                        #                    tags$hr()
-                                                        #                  )
-                                                        # ),
-                                                        # conditionalPanel(condition = "input.cm_tabslctd == 'marker_umap'",
-                                                        #                  selectInput(inputId = "select_markers_umap", label = strong("select marker to visualize in clusters:"), choices = all_genes_common_in_all_groups, multiple = T, selected = fav_genes),
-                                                        #                                                                            wellPanel(style = "background:Teal",
-                                                        #                    tags$hr(),
-                                                        #                    tags$p(style = "font-family:Comic Sans MS;color:white",
-                                                        #                    "Visualize the top cluster markers to confirm that they are expressed in the appropriate populations"
-                                                        #                    ),
-                                                        #                    tags$hr()
-                                                        #                  )
-                                                        # )
-                                                        
+
                                        ),
                                        
                                        #2.3 Option/subtitle for allowing the labelling of the clusters
@@ -154,9 +132,11 @@ ui = fluidPage(theme = shinytheme("united"),
                                          uiOutput("cluster_markers_outputs")),
                                        conditionalPanel(
                                          condition = "input.graph_type == 'Label clusters'", 
-                                         withSpinner(plotOutput("labelled_umap")))
-                                       
-                                       
+                                         withSpinner(plotOutput("labelled_umap")),
+                                         tags$hr(),
+                                         HTML(
+                                           "<div class='text-center'><button class='btn-success btn-lg' onclick = 'fakeClick(\"Differential expression\")'> Explore differential expression in generated clusters</button></div>"
+                                         ))
                                      )
                                    )
                           )
@@ -200,8 +180,7 @@ server = function(input, output) {
   ######################
   ##Dynamic input field for selecting cluster to plot table of markers
   output$dyn_clusters <- renderUI({
-    umap_clusters = umap_clusters()
-    selectInput(inputId = "marker_genes_cluster", label = strong("Choose cluster to display markers for"), choices = unique(umap_clusters$seurat_clusters), multiple = F)
+    selectInput(inputId = "marker_genes_cluster", label = strong("Choose cluster to display markers for"), choices = unique(umap_clusters()[["seurat_clusters"]][["seurat_clusters"]]), multiple = F)
   })
   
   ##Displaying table of cluster markers for annotating cell types
@@ -221,24 +200,10 @@ server = function(input, output) {
     umap_cluster_modified_ul
   })
   
-  # output$conserved_markers_umap = renderPlot({
-  #   FeaturePlot(umap_cluster_modified_rna(), features = input$select_markers_umap, min.cutoff = "q9")
-  # })
-  
-  ##Conditional tabsets for the DE table and ggplot UI change for input triggered by selecting tab 
-  # output$cluster_markers_outputs <- renderUI({
-  #   tabsetPanel(tabPanel("Top cluster markers table", value = "marker_tbl", 
-  #                        withSpinner(dataTableOutput("top_conserved_genes"))),
-  #               tabPanel("Cluster marker UMAPs", value = "marker_umap",
-  #                        withSpinner(plotOutput("conserved_markers_umap"))), id = "cm_tabslctd")
-  # })
+
   
   output$top_markers_umap <- renderUI({
-    a = head(cluster_markers()[,1])
-    a = factor(a, levels = c(a))
-    print(a)
-    selectInput(inputId = "select_markers_umap", label = strong("select marker to visualize in clusters:"), choices = all_genes_common_in_all_groups, multiple = T, selected = a)
-    
+    selectInput(inputId = "select_markers_umap", label = strong("select marker to visualize in clusters:"), choices = cluster_markers()[,1], multiple = T, selected = head(cluster_markers()[,1], n = 4))
   })
   output$conserved_markers_umap = renderPlot({
     FeaturePlot(umap_cluster_modified_rna(), features = input$select_markers_umap, min.cutoff = "q9")
@@ -265,7 +230,7 @@ server = function(input, output) {
     wellPanel(style = "background:Teal",
               tags$hr(),
               tags$p(style = "font-family:Comic Sans MS;color:white",
-                     paste("Listing top marker genes in cluster", input$select_markers_umap, "which can subsequently be used in labelling this cluster.")
+                     paste("Listing top cluster marker genes which can subsequently be used in labelling the cluster.")
               ),
               tags$hr()
     )
@@ -280,17 +245,14 @@ server = function(input, output) {
   ######################
   ##Generating dynamic fields for labelling UMAP clusters and initializing the fields with placeholders
   output$cluster_annot <- renderUI({
-    umap_cluster_modified1 = umap_cluster_modified_rna()
-    
-    if(length(unique(umap_cluster_modified1$seurat_clusters)) == length(cluster_names)){
-      umap_clusters = umap_clusters()
-      lapply(0:(length(unique(umap_clusters$seurat_clusters))-1), function(x) {
+
+    if(length(unique(umap_cluster_modified_rna()[["seurat_clusters"]][["seurat_clusters"]])) == length(cluster_names)){
+      lapply(0:(length(unique(umap_cluster_modified_rna()[["seurat_clusters"]][["seurat_clusters"]]))-1), function(x) {
         textInput(inputId = paste("labeller", x), label = strong(paste("Label cluster", x, "based on marker genes")), value = cluster_names[x+1])
       })
       
     } else {
-      umap_clusters = umap_clusters()
-      lapply(0:(length(unique(umap_clusters$seurat_clusters))-1), function(x) {
+      lapply(0:(length(unique(umap_cluster_modified_rna()[["seurat_clusters"]][["seurat_clusters"]]))-1), function(x) {
         textInput(inputId = paste("labeller", x), label = strong(paste("Label cluster", x, "based on marker genes")), value = x)
       })
     }
@@ -301,12 +263,10 @@ server = function(input, output) {
   
   ##Observer to allow updating of cluster names dynamically as typed in
   observe({
-    umap_cluster_modified = umap_cluster_modified_rna()
-    
-    req(unlist(lapply(0:(length(unique(umap_cluster_modified$seurat_clusters))-1), function(x) {
+    req(unlist(lapply(0:(length(unique(umap_cluster_modified_rna()[["seurat_clusters"]][["seurat_clusters"]]))-1), function(x) {
       new_cluster_name = input[[paste("labeller",x)]]
     })))
-    annotation$annot = unlist(lapply(0:(length(unique(umap_cluster_modified$seurat_clusters))-1), function(x) {
+    annotation$annot = unlist(lapply(0:(length(unique(umap_cluster_modified_rna()[["seurat_clusters"]][["seurat_clusters"]]))-1), function(x) {
       new_cluster_name = input[[paste("labeller",x)]]
     }))
   })
@@ -315,14 +275,13 @@ server = function(input, output) {
   output$cluster_ids <- renderUI({
     umap_names = annotation$annot
     #FindMarkers(stim_markers(), ident.1 = paste(input$select_cell_type, "KO", sep = "_"), ident.2 = paste(input$select_cell_type, "WT", sep = "_"), verbose = FALSE)
-    umap_cluster_modified1 = umap_cluster_modified_rna()
-    
-    if(length(unique(umap_cluster_modified1$seurat_clusters)) == length(umap_names)){
+
+    if(length(unique(umap_cluster_modified_rna()[["seurat_clusters"]][["seurat_clusters"]])) == length(umap_names)){
       umap_names = annotation$annot
       selectInput(inputId = "select_cell_type", label = strong("Select cell type to compare gene expression across conditions:"),choices = umap_names, multiple = F)
       
     } else {
-      selectInput(inputId = "select_cell_type", label = strong("Select cell type to compare gene expression across conditions:"),choices = unique(umap_cluster_modified1$seurat_clusters), multiple = F)
+      selectInput(inputId = "select_cell_type", label = strong("Select cell population to compare gene expression across conditions:"),choices = unique(umap_cluster_modified_rna()[["seurat_clusters"]][["seurat_clusters"]]), multiple = F)
     }
     
   })
@@ -419,12 +378,8 @@ server = function(input, output) {
     wellPanel(style = "background:Teal",
               tags$hr(),
               tags$p(style = "font-family:Comic Sans MS;color:white",
-                     #paste("Comparison of", input$select_markers_dotplot[1], input$select_markers_dotplot[2], "expression between", conditions[1], "and", conditions[2], "across clusters using a dotplot. Red for Wildtype and Blue for CD18 KO cells with the increasing in intensity of the respective colour correlating with the level of gene expression in the cluster"),
-                     #print(str(input$select_markers_dotplot)),
-                     # paste(unlist(for (i in 1:length(input$select_markers_dotplot)) {
-                     #   print(paste(input$select_markers_dotplot[i]))
-                     # }
-                     paste("Comparison of gene expression between", conditions[1], "and", conditions[2], "across clusters using a dotplot. Red for", conditions[2], "and Blue for", conditions[1], "cells with the increase in intensity of the respective colour correlating with the level of gene expression in the cluster.")
+                     
+                     paste("Comparison of gene expression between", conditions[1], "and", conditions[2], "across clusters using a dotplot. The genes are on the x-axis and the clusters on the y-axis. Red is for", conditions[1], "and Blue for", conditions[2], "cells with the increase in intensity of the respective colour (from grey to blue/red) correlating with the increase in the average level of gene expression across all cells in the cluster. The size of the dot corresponds to the percentage of cells in the cluster expressing the gene.")
                      
               ),
               tags$hr()
@@ -474,7 +429,7 @@ server = function(input, output) {
     }
   )
   
-  ##Retrieving table for DE ggplotfrom precomputed list
+  ##Retrieving table for DE scatterplotfrom precomputed list
   cell_type_de = reactive({
     umap_names = annotation$annot
     umap_cluster_modified1 = umap_cluster_modified_rna()
@@ -506,7 +461,7 @@ server = function(input, output) {
   
   ##Conditional tabsets for the DE table and ggplot UI change for input triggered by selecting tab 
   output$de_outputs <- renderUI({
-    tabsetPanel(tabPanel("DE ggplot", value = "gg", 
+    tabsetPanel(tabPanel("DE scatterplot", value = "gg", 
                          withSpinner(plotOutput("cell_type_plot", click = clickOpts(id ="plot_click"))), dataTableOutput("click_info")),
                 tabPanel("DE table", value = "tbl",
                          withSpinner(dataTableOutput("top_de_genes"))), id = "tabslctd")
@@ -519,7 +474,7 @@ server = function(input, output) {
     
   })
   
-  ##Displaying table with gene details upon click of point in DE ggplot
+  ##Displaying table with gene details upon click of point in DE scatterplot
   output$click_info <- renderDataTable({
     req(displayed_text())
     
