@@ -17,7 +17,7 @@ tabPanel("About",
 Here, you can explore the single-cell RNA sequencing (scRNA-Seq) results from wild type (WT) and β2 integrin-deficient (CD18 Knock-out[KO]) gamma delta (γδ) T cells isolated from mice lungs.
 </p>
 <p>
-The analysis was carried using the Seurat pipeline for differential expression. Further details can be found in our paper summarized below which you should cite if you use our data
+The analysis was carried out using the Seurat pipeline for differential expression. Further details can be found in our paper summarized below which you should cite if you use our data.
 </p>
 
 <div class='citation'>
@@ -59,6 +59,7 @@ of the different populations of γδ T cells in the wildtype replicates (WT1 and
 </figure>
 </div>
 
-"))
+<footer align = 'center' style = 'position:absolute; bottom:80; width:95%; height:20px; padding: 10px; z-index: 200; background-color:PowderBlue;'> <hr></hr> <p>This web-app was developed by <a href='https://https://www.gla.ac.uk/researchinstitutes/iii/staff/?webapp=staffcontact&action=person&id=4edfe8ec8a95' target='_blank'> Jesse Rop </a> as a <a href='https://https://www.ukri.org/research/global-challenges-research-fund/' target='_blank'> GCRF </a> exchange program project under the supervision of <a href='https://https://www.gla.ac.uk/researchinstitutes/iii/staff/thomasdanotto/' target='_blank'> Dr Thomas Otto </a> and with the assistance of <a href='https://https://www.gla.ac.uk/researchinstitutes/iii/staff/vickymorrison/' target='_blank'> Dr Vicky Morrison </a> and <a href='https://https://www.gla.ac.uk/researchinstitutes/iii/staff/?webapp=staffcontact&action=person&id=49d8ebe38396' target='_blank'> Scott Arkinson </a>. Further acknowledgements on the generation of the data hosted in the app can be found in our <a href='https://www.google.com' target='_blank'> paper </a>.</p> <p> The code used to develop the app can be found <a href='https://github.com/JesseRop/Tcells_amp_adopted/blob/master/introduction_page.R' target='_blank'> here </a>. For any queries or suggestions kindly <a href='mailto:ThomasDan.Otto@glasgow.ac.uk' target='_blank'> contact us</a>.</p>
+</footer>"))
          
 )
