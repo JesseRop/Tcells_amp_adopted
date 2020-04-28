@@ -37,6 +37,9 @@ tcells_combined_clusters_tables_res<-readRDS("D:/GCRF_UoG/Vicky_JCR_Shiny/tcells
 ##Reading in the list of precomputed table of differential expressed (DE) genes
 tcells_combined_de_tables = readRDS("D:/GCRF_UoG/Vicky_JCR_Shiny/preprocessed/tcells_combined_de_tables.rds")
 
+##Reading in the list of precomputed table of cluster markers
+tcells_combined_de_ggplots_table = readRDS("D:/GCRF_UoG/Vicky_JCR_Shiny/tcells_combined_de_ggplots_table.rds")
+
 ##Reading in all the genes that are present in WT1, WT2 and KO raw objects
 all_genes_common_in_all_groups = readRDS("D:/GCRF_UoG/Vicky_JCR_Shiny/all_genes_common_in_all_groups.rds")
 
@@ -259,4 +262,47 @@ if (!(all(exists("tcells_combined_umap_list_res"), exists("tcells_combined_clust
   
   saveRDS(tcells_combined_de_tables, "D:/GCRF_UoG/Vicky_JCR_Shiny/tcells_combined_de_tables.rds")
   
+  ##Precomputing and saving the list of ggplot per cluster for all resolutions
+  tcells_combined_de_ggplots_table = lapply(tcells_combined_umap_list_res, function(x) { 
+    DefaultAssay(x) = "RNA"
+    
+    lapply(0:(length(unique(x$seurat_clusters))-1), function(y) {
+      cells_type <- subset(x, idents = y)
+      #Idents(cells_type) <- "sample"
+      Idents(cells_type) <- "group"
+      avg.cells <- log1p(AverageExpression(cells_type, verbose = FALSE)$RNA)
+      avg.cells$gene <- rownames(avg.cells)
+      avg.cells <- avg.cells %>% filter(!grepl("^mt-", gene)) %>% dplyr::left_join(x = ., y = uniprot_info, by = c("gene" = "Gene names  (primary )")) %>% dplyr::distinct(., gene, .keep_all = T)%>% select(gene, KO, WT , `Protein names`, uniprot)
+
+    })
+  })
+  
+  saveRDS(tcells_combined_de_ggplots_table, "D:/GCRF_UoG/Vicky_JCR_Shiny/tcells_combined_de_ggplots_table.rds")
+  
+  # ##Precomputing and saving the list of ggplot per cluster for all resolutions
+  # tcells_combined_de_ggplots = lapply(tcells_combined_de_ggplots_table, function(x) { 
+  #   DefaultAssay(x) = "RNA"
+  #   
+  #   lapply(0:(length(unique(x$seurat_clusters))-1), function(y) {
+  #     theme_set(theme_cowplot())
+  #     grob <- grobTree(textGrob("Click on points to diplay more information about the gene", x=0.1,  y=0.95, hjust=0,
+  #                               gp=gpar(col="red", fontsize=9, fontface="italic")))
+  #     ggplot(data=avg.cells, aes_string("KO","WT")) + geom_point() + annotation_custom(grob)
+  #     
+  #   })
+  # })
+  # 
+  # saveRDS(tcells_combined_de_tables, "D:/GCRF_UoG/Vicky_JCR_Shiny/tcells_combined_de_ggplot.rds")
+  
 }
+
+##functions
+
+
+which_numeric_cols = function(dat) {
+  which(sapply(seq(ncol(dat)), function(i) {
+    is.numeric(dat[,i])
+  }))
+}
+
+
